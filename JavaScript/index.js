@@ -1,17 +1,26 @@
 // Importe le module readline
-const readline = require('readline');
-  
+const readline = require('readline')
 
-// Crée un objet readline avec les flux d'entrée et de sortie standard
-const prompts = readline.createInterface(process.stdin, process.stdout);
-  
-// Methode de question :
-//  - Premier argument = Requête
-//  - Deuxième argument = Gestionnaire qui interprète la réponse
-prompts.question('>>', (response) => {
-  
-    console.log(`Bonjour ${response} !`);
-      
-    // Terminer le processus
-    process.exit();
-});
+/**
+ * Fonction qui crée un prompt qui va boucler
+ * 
+ * @returns {readline.ReadLine} L'interface configurée
+ */
+function createReadlineInterface() {
+    // Crée un objet readline
+    const rl = readline.createInterface({input: process.stdin, output: process.stdout});
+
+    // Crée un évènement 'line' qui s'exécute en cas de retour chariot
+    // Dans ce cas là il relance un prompt pour avoir une boucle
+    rl.on('line', () => rl.prompt())
+
+    // Ferme le prompt en cas de fermeture (Ctrl-D)
+    rl.on('close', () => process.exit())
+    
+    // Lance un prompt
+    rl.prompt()
+
+    return rl
+}
+
+createReadlineInterface()
