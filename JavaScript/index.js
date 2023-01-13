@@ -1,10 +1,13 @@
-// Importe le module readline
+// Importation des modules
 const readline = require('readline')
 const { exec } = require('child_process')
+const { spawn } = require('child_process')
 const process = require('process')
+const path = require('path')
 
-CMDS = {}
+// Définition d'un dictionnaire de commandes en fonction de l'OS
 OS = process.platform
+CMDS = {}
 
 if (OS == "win32") {
     CMDS = {
@@ -12,8 +15,8 @@ if (OS == "win32") {
         bing : {
             cmd : "taskkill",
             "-k" : "/f /pid",
-            "-p" : "/s /pid",
-            "-c" : "/r /pid"
+            "-p" : "/s /pid", // marche pas
+            "-c" : "/r /pid"  // marche pas
         }
     }
 } else if (OS == "linux") {
@@ -28,7 +31,10 @@ if (OS == "win32") {
     }
 }
 
-async function listProcesses() {
+// Définition des fonctions
+
+// Liste les processus
+function listProcesses() {
     exec(CMDS.lp, (err, stdout, stderr) => {
         if (err) {
           console.error(err);
@@ -38,7 +44,8 @@ async function listProcesses() {
     });
 }
 
-async function killProcess(param, pid) {
+// Tue, pause ou continue un processus en fonction du paramètre
+function killProcess(param, pid) {
     exec(CMDS.bing.cmd + " " + CMDS.bing[param] + " " + pid, (err, stdout, stderr) => {
         if (err) {
           console.error(err);
@@ -48,7 +55,27 @@ async function killProcess(param, pid) {
     });
 }
 
-async function main() {
+// Exécute un fichier en fonction de son chemin relatif ou absolu ou s'il est dans le PATH
+function ex(p) {
+    try {
+        const resolvedPath = path.resolve(p)
+        exec(resolvedPath, (err, stdout, stderr) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            console.log(stdout);
+        });
+    } catch (error) {
+        spawn(p, {
+            stdio: 'inherit',
+            shell: true
+        })
+    }
+}
+
+// Fonction principale
+function main() {
     // Crée une interface
     const rl = readline.createInterface({input: process.stdin, output: process.stdout})
 
@@ -59,10 +86,12 @@ async function main() {
     rl.on('line', async (line) => {
         if (line == "exit") {
             process.exit()
-        } else if (line == "lp") {
-            await listProcesses()
+        } else if (line.startsWith("lp")) {
+            listProcesses()
         } else if (line.startsWith("bing")) {
-            await killProcess(line.split(" ")[1], line.split(" ")[2])
+            killProcess(line.split(" ")[1], line.split(" ")[2])
+        } else if (line.startsWith("ex")) {
+            ex(line.split(" ")[1])
         }
         rl.prompt()
     })
