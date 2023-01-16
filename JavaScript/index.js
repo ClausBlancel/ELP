@@ -4,6 +4,7 @@ const { exec } = require('child_process')
 const { spawn } = require('child_process')
 const process = require('process')
 const path = require('path')
+const keypress = require('keypress');
 
 // Définition d'un dictionnaire de commandes en fonction de l'OS
 OS = process.platform
@@ -79,6 +80,16 @@ function main() {
     // Crée une interface
     const rl = readline.createInterface({input: process.stdin, output: process.stdout})
 
+    keypress(process.stdin);
+
+    process.stdin.on('keypress', function (ch, key) {
+      if (key && key.ctrl && key.name == 'p') {
+        console.log('Ctrl+P => Sortie du programme');
+        rl.close();
+      }
+    });
+    
+    process.stdin.setRawMode(true);
     // Lance le premier prompt
     rl.prompt()
 
