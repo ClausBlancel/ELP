@@ -28,54 +28,97 @@ if (OS == "win32") {
             "-k" : "-KILL",
             "-p" : "-STOP",
             "-c" : "-CONT"
-        }
+        },
+        keep : "bg",
     }
 }
 
 // Définition des fonctions
 
-// Liste les processus
+/**
+ * Liste les processus en cours d'exécution
+ */
 function listProcesses() {
-    exec(CMDS.lp, (err, stdout, stderr) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-        console.log(stdout);
-    });
+    spawn(CMDS.lp, {
+        stdio: 'inherit',
+        shell: true
+    })
 }
 
-// Tue, pause ou continue un processus en fonction du paramètre
+// background execution
+// exec(CMDS.lp, (err, stdout, stderr) => {
+//     if (err) {
+//       console.error(err);
+//       return;
+//     }
+//     console.log(stdout);
+// });
+
+
+/**
+ * Kill, Pause ou Continue un processus à partir de son PID
+ * @param {string} param 
+ * @param {int} pid 
+ */
 function killProcess(param, pid) {
-    exec(CMDS.bing.cmd + " " + CMDS.bing[param] + " " + pid, (err, stdout, stderr) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-        console.log(stdout);
-    });
-}
-
-// Exécute un fichier en fonction de son chemin relatif ou absolu ou s'il est dans le PATH
-function ex(p) {
     try {
-        const resolvedPath = path.resolve(p)
-        exec(resolvedPath, (err, stdout, stderr) => {
-            if (err) {
-              console.error(err);
-              return;
-            }
-            console.log(stdout);
-        });
-    } catch (error) {
-        spawn(p, {
+        spawn(CMDS.bing.cmd + " " + CMDS.bing[param] + " " + pid, {
             stdio: 'inherit',
             shell: true
-        })
+            })
+    } catch (error) {
+        console.log(error)
     }
 }
 
-// Fonction principale
+// background execution
+// exec(CMDS.bing.cmd + " " + CMDS.bing[param] + " " + pid, (err, stdout, stderr) => {
+//     if (err) {
+//       console.error(err);
+//       return;
+//     }
+//     console.log(stdout);
+// });
+
+/**
+ * Exécute un fichier en fonction de son chemin relatif ou absolu ou s'il est dans le PATH
+ * @param {string} p 
+ */
+function ex(p) {
+    // try {
+    //     exec(p, (err, stdout, stderr) => {
+    //         console.log(stdout);
+    //     });
+    // } catch (error) {
+        try {
+            spawn(p, {
+                stdio: 'inherit',
+                shell: true
+            })            
+        } catch (error) {
+            console.log(error)
+        }
+    // }
+}
+
+
+/**
+ * Détache un processus du CLI
+ * @param {int} pid 
+ */
+function keep(pid) {
+    try {
+        exec(CMDS.keep + " " + pid, (err, stdout, stderr) => {
+            console.log(stdout);
+        });
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+/**
+ * Fonction principale
+ */
 function main() {
     // Crée une interface
     const rl = readline.createInterface({input: process.stdin, output: process.stdout})
@@ -90,6 +133,7 @@ function main() {
     });
     
     process.stdin.setRawMode(true);
+    
     // Lance le premier prompt
     rl.prompt()
 
@@ -103,6 +147,10 @@ function main() {
             killProcess(line.split(" ")[1], line.split(" ")[2])
         } else if (line.startsWith("ex")) {
             ex(line.split(" ")[1])
+        } else if (line.startsWith("keep")) {
+            keep(line.split(" ")[1])
+        } else {
+            console.log("Commande inconnue")
         }
         rl.prompt()
     })
