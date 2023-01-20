@@ -1,65 +1,45 @@
 module Main exposing (..)
 
--- Press buttons to increment and decrement a counter.
---
--- Read how it works:
---   https://guide.elm-lang.org/architecture/buttons.html
---
-
-
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
-
+import Html exposing (Html, Attribute, div, input, text)
+import Html.Attributes exposing (..)
+import Html.Events exposing (onInput)
 
 
 -- MAIN
 
-
 main : Program () Model Msg
 main =
-  Browser.sandbox { init = init, update = update, view = view }
-
-
+    Browser.sandbox
+        { init = init
+        , update = update
+        , view = view
+        }
 
 -- MODEL
 
-
-type alias Model = Int
-
+type alias Model = { content : String }
 
 init : Model
-init =
-  0
-
+init = { content = "" }
 
 
 -- UPDATE
 
-
 type Msg
-  = Increment
-  | Decrement
-
+    = Change String
 
 update : Msg -> Model -> Model
-update msg model =
-  case msg of
-    Increment ->
-      model + 1
-
-    Decrement ->
-      model - 1
-
+update msg model = 
+    case msg of
+        Change newContent ->
+            { model | content = newContent }
 
 
 -- VIEW
-
-
 view : Model -> Html Msg
 view model =
-  div []
-    [ button [ onClick Decrement ] [ text "-" ]
-    , div [] [ text (String.fromInt model) ]
-    , button [ onClick Increment ] [ text "+" ]
+    div []
+        [ input [ placeholder "Text to replicate", value model.content, onInput Change ] []
+    , div [] [ text (model.content) ]
     ]
