@@ -1,5 +1,5 @@
 // Importation des modules
-const readline = require('readline')
+const prompt = require('prompt')
 const { spawn } = require('child_process')
 const process = require('process')
 const keypress = require('keypress');
@@ -109,41 +109,30 @@ function keep(pid) {
 /**
  * Fonction principale
  */
-async function main() {
-    // Crée une interface
-    const rl = readline.createInterface({input: process.stdin, output: process.stdout})
-    rl.setPrompt('>>>')
+function main() {
+    // keypress(process.stdin);
 
-    keypress(process.stdin);
-
-    process.stdin.on('keypress', function (ch, key) {
-      if (key && key.ctrl && key.name == 'p') {
-        console.log('Ctrl+P => Sortie du programme');
-        rl.close();
-      }
-    });
+    // process.stdin.on('keypress', function (ch, key) {
+    //   if (key && key.ctrl && key.name == 'p') {
+    //     console.log('Ctrl+P => Sortie du programme');
+    //     rl.close();
+    //   }
+    // });
     
-    process.stdin.setRawMode(true);
+    // process.stdin.setRawMode(true);
+    
+    prompt.start();
 
-    rl.prompt()
-
-    rl.on('line', async function(line) {
-        if (line.startsWith("lp")) {
-            await listProcesses()
-        } else if (line.startsWith("bing")) {
-            var args = line.split(" ")
-            killProcess(args[1], args[2])
-        } else if (line.startsWith("ex")) {
-            ex(line.split(" ")[1])            
-        } else if (line.startsWith("keep")) {
-            keep(line.split(" ")[1])
-        } else if (line == "") {
-            // Ne rien faire
-        } else {
-            console.log("Commande inconnue")
-        }
-        rl.prompt()
-    }).on('close', () => process.exit())
+    new Promise((resolve, reject) => {
+        prompt.get(['command'], (err, result) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(result.command)
+            }
+        })
+    })
+    
 
 }
 
