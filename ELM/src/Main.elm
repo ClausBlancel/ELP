@@ -10,18 +10,21 @@ import Html.Events exposing (onInput)
 
 main : Program () Model Msg
 main =
-    Browser.sandbox
+    Browser.element
         { init = init
         , update = update
         , view = view
+        , subscriptions = subscriptions
         }
 
 -- MODEL
 
 type alias Model = { content : String }
 
-init : Model
-init = { content = "" }
+init : () -> ( Model, Cmd Msg )
+init content =
+    ({ content = "test" }
+    , Cmd.none)
 
 
 -- UPDATE
@@ -29,11 +32,12 @@ init = { content = "" }
 type Msg
     = Change String
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = 
     case msg of
         Change newContent ->
-            { model | content = newContent }
+            ({ model | content = newContent }
+            , Cmd.none)
 
 
 -- VIEW
@@ -43,3 +47,9 @@ view model =
         [ input [ placeholder "Text to replicate", value model.content, onInput Change ] []
     , div [] [ text (model.content) ]
     ]
+
+-- SUBSCRIPTIONS    
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
