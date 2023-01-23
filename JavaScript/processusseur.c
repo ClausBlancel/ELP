@@ -4,6 +4,6 @@
 int main() {
     // lance un processus infini
     while (1) {
-        sleep(10);
+        sleep(100);
     }
 }

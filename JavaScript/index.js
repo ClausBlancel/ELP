@@ -27,7 +27,6 @@ if (OS == "win32") {
             "-p" : "-STOP",
             "-c" : "-CONT"
         },
-        keep : "bg",
     }
 }
 
@@ -36,11 +35,19 @@ if (OS == "win32") {
 /**
  * Liste les processus en cours d'exécution
  */
-function listProcesses() {
-    spawn(CMDS.lp, {
-        stdio: 'inherit',
-        shell: true
-    })
+async function listProcesses() {
+    try {
+        return new Promise((resolve, reject) => {
+            spawn(CMDS.lp, {
+                stdio: 'inherit',
+                shell: true
+            }).on('close', (code) => {
+                resolve(code)
+            })
+        })
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 /**
@@ -50,26 +57,14 @@ function listProcesses() {
  */
 function killProcess(param, pid) {
     try {
-        spawn(CMDS.bing.cmd + " " + CMDS.bing[param] + " " + pid, {
-            stdio: 'inherit',
-            shell: true
+        return new Promise((resolve, reject) => {
+            spawn(CMDS.bing.cmd + " " + CMDS.bing[param] + " " + pid, {
+                stdio: 'inherit',
+                shell: true
+            }).on('close', (code) => {
+                resolve(code)
             })
-            switch (param) {
-                case "-k":
-                    console.log("Processus " + pid + " tué")
-                    break;
-
-                case "-p":
-                    console.log("Processus " + pid + " mis en pause")
-                    break;
-
-                case "-c":
-                    console.log("Processus " + pid + " relancé")
-                    break;
-            
-                default:
-                    break;
-            }
+        })
     } catch (error) {
         console.log(error)
     }
@@ -81,10 +76,14 @@ function killProcess(param, pid) {
  */
 function ex(p) {
     try {
-        spawn(p, {
-            stdio: 'inherit',
-            shell: true
-        })            
+        return new Promise ((resolve, reject) => {
+            spawn(p, {
+                stdio: 'inherit',
+                shell: true
+            }).on('close', (code) => {
+                resolve(code)
+            })
+        })      
     } catch (error) {
         console.log(error)
     }
@@ -96,14 +95,7 @@ function ex(p) {
  * @param {int} pid 
  */
 function keep(pid) {
-    try {
-        spawn(CMDS.keep + " " + pid, {
-            stdio: 'inherit',
-            shell: true
-        })
-    } catch (error) {
-        console.log(error)
-    }
+
 }
 
 /**
@@ -125,25 +117,44 @@ async function main() {
     
     process.stdin.setRawMode(true);
 
+    // Affiche le premier prompt
     rl.prompt()
 
-    rl.on('line', async function(line) {
-        if (line.startsWith("lp")) {
-            await listProcesses()
-        } else if (line.startsWith("bing")) {
-            var args = line.split(" ")
-            killProcess(args[1], args[2])
-        } else if (line.startsWith("ex")) {
-            ex(line.split(" ")[1])            
-        } else if (line.startsWith("keep")) {
-            keep(line.split(" ")[1])
-        } else if (line == "") {
-            // Ne rien faire
+    // Attend une ligne de commande 
+    rl.on('line', async (line) => {
+        if (line.endsWith("!")) {
+            if (line.startsWith("lp")) {
+                listProcesses()
+            } else if (line.startsWith("bing")) {
+                var args = line.split(" ")
+                killProcess(args[1], args[2])
+            } else if (line.startsWith("ex")) {
+                ex(line.split(" ")[1])            
+            } else if (line.startsWith("keep")) {
+                keep(line.split(" ")[1])
+            } else if (line == "") {
+                // Ne rien faire
+            } else {
+                console.log("Commande inconnue")
+            }
         } else {
-            console.log("Commande inconnue")
+            if (line.startsWith("lp")) {
+                await listProcesses()
+            } else if (line.startsWith("bing")) {
+                var args = line.split(" ")
+                await killProcess(args[1], args[2])
+            } else if (line.startsWith("ex")) {
+                await ex(line.split(" ")[1])            
+            } else if (line.startsWith("keep")) {
+                await keep(line.split(" ")[1])
+            } else if (line == "") {
+                // Ne rien faire
+            } else {
+                console.log("Commande inconnue")
+            }
         }
         rl.prompt()
-    }).on('close', () => process.exit())
+    }).on('close', () => process.exit()) // Quitte le programme si Ctrl+D / Ctrl+C
 
 }
 
