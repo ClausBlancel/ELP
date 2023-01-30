@@ -5334,9 +5334,10 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Main$GotText = function (a) {
-	return {$: 'GotText', a: a};
+var $author$project$Main$GotWords = function (a) {
+	return {$: 'GotWords', a: a};
 };
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -5892,17 +5893,6 @@ var $elm$http$Http$expectStringResponse = F2(
 			$elm$core$Basics$identity,
 			A2($elm$core$Basics$composeR, toResult, toMsg));
 	});
-var $elm$http$Http$BadBody = function (a) {
-	return {$: 'BadBody', a: a};
-};
-var $elm$http$Http$BadStatus = function (a) {
-	return {$: 'BadStatus', a: a};
-};
-var $elm$http$Http$BadUrl = function (a) {
-	return {$: 'BadUrl', a: a};
-};
-var $elm$http$Http$NetworkError = {$: 'NetworkError'};
-var $elm$http$Http$Timeout = {$: 'Timeout'};
 var $elm$core$Result$mapError = F2(
 	function (f, result) {
 		if (result.$ === 'Ok') {
@@ -5914,6 +5904,17 @@ var $elm$core$Result$mapError = F2(
 				f(e));
 		}
 	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
 var $elm$http$Http$resolve = F2(
 	function (toResult, response) {
 		switch (response.$) {
@@ -5937,12 +5938,52 @@ var $elm$http$Http$resolve = F2(
 					toResult(body));
 		}
 	});
-var $elm$http$Http$expectString = function (toMsg) {
-	return A2(
-		$elm$http$Http$expectStringResponse,
-		toMsg,
-		$elm$http$Http$resolve($elm$core$Result$Ok));
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$Main$Word = function (meanings) {
+	return {meanings: meanings};
 };
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Main$Meaning = F2(
+	function (partOfSpeech, definitions) {
+		return {definitions: definitions, partOfSpeech: partOfSpeech};
+	});
+var $author$project$Main$Definition = function (definition) {
+	return {definition: definition};
+};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$definitionDecoder = A2(
+	$elm$json$Json$Decode$map,
+	$author$project$Main$Definition,
+	A2($elm$json$Json$Decode$field, 'definition', $elm$json$Json$Decode$string));
+var $author$project$Main$meanDecoder = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Main$Meaning,
+	A2($elm$json$Json$Decode$field, 'partOfSpeech', $elm$json$Json$Decode$string),
+	A2(
+		$elm$json$Json$Decode$field,
+		'definitions',
+		$elm$json$Json$Decode$list($author$project$Main$definitionDecoder)));
+var $author$project$Main$wordDecoder = A2(
+	$elm$json$Json$Decode$map,
+	$author$project$Main$Word,
+	A2(
+		$elm$json$Json$Decode$field,
+		'meanings',
+		$elm$json$Json$Decode$list($author$project$Main$meanDecoder)));
+var $author$project$Main$fullDecoder = $elm$json$Json$Decode$list($author$project$Main$wordDecoder);
 var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
@@ -6116,17 +6157,17 @@ var $elm$http$Http$get = function (r) {
 	return $elm$http$Http$request(
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
-var $author$project$Main$getDefinition = function (word) {
+var $author$project$Main$getMeanings = function (word) {
 	return $elm$http$Http$get(
 		{
-			expect: $elm$http$Http$expectString($author$project$Main$GotText),
+			expect: A2($elm$http$Http$expectJson, $author$project$Main$GotWords, $author$project$Main$fullDecoder),
 			url: 'https://api.dictionaryapi.dev/api/v2/entries/en/' + word
 		});
 };
 var $author$project$Main$init = function (model) {
 	return _Utils_Tuple2(
-		{checkboxState: false, definition: '', wordToFind: ''},
-		$author$project$Main$getDefinition('hello'));
+		{checkboxState: false, wordToFind: '', words: _List_Nil},
+		$author$project$Main$getMeanings('hello'));
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
@@ -6153,15 +6194,16 @@ var $author$project$Main$update = F2(
 						{wordToFind: wordToFind}),
 					$elm$core$Platform$Cmd$none);
 			default:
-				if (msg.a.$ === 'Ok') {
-					var definition = msg.a.a;
+				var result = msg.a;
+				if (result.$ === 'Ok') {
+					var words = result.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{definition: definition}),
+							{words: words}),
 						$elm$core$Platform$Cmd$none);
 				} else {
-					var err = msg.a.a;
+					var error = result.a;
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 		}
@@ -6202,12 +6244,10 @@ var $elm$html$Html$Events$stopPropagationOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
 	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$html$Html$Events$targetValue = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -6224,6 +6264,7 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$core$Debug$toString = _Debug_toString;
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -6276,7 +6317,8 @@ var $author$project$Main$view = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text(model.definition)
+						$elm$html$Html$text(
+						$elm$core$Debug$toString(model.words))
 					]))
 			]));
 };

@@ -25,13 +25,13 @@ main =
 type alias Model = 
     { wordToFind : String
     , checkboxState : Bool
-    , meanings : String }
+    , words : List Word }
 
 init : () -> ( Model, Cmd Msg )
 init model =
     ( { wordToFind = "" 
     , checkboxState = False 
-    , meanings = ""}
+    , words = []}
     , getMeanings "hello")
 
 
@@ -41,7 +41,7 @@ init model =
 type Msg = 
     Check
     | Change String
-    | GotText (Result Http.Error (List Word))
+    | GotWords (Result Http.Error (List Word))
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -53,15 +53,13 @@ update msg model =
         Change wordToFind ->
             ( { model | wordToFind = wordToFind }, Cmd.none)
 
-        GotText result ->
+        GotWords result ->
             case result of
-                Ok meanings ->
-                    ( { model | meanings = meanings }, Cmd.none )
+                Ok words ->
+                    ( { model | words = words }, Cmd.none )
 
                 Err error ->
                     ( model, Cmd.none )
-
-
 
 -- VIEW
 
@@ -72,7 +70,7 @@ view model =
     , div [] [ text (if model.wordToFind == "hello" then "Bien joué" else "Essaye de trouver") ]
     , input [ type_ "text", onInput Change ] []
     , input [ type_ "checkbox", onClick Check ] []
-    , div [] [ text model.meanings ]
+    , div [] [ text (toString model.words) ]
     ]
 
 -- SUBSCRIPTIONS    
@@ -81,14 +79,13 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
 
-
 -- HTTP
 
 getMeanings : String -> Cmd Msg
 getMeanings word = 
     Http.get {
         url = ("https://api.dictionaryapi.dev/api/v2/entries/en/" ++ word)
-        , expect = Http.expectJson GotText fullDecoder
+        , expect = Http.expectJson GotWords fullDecoder
     }
 
 fullDecoder : Decoder (List Word)
