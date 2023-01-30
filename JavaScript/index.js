@@ -33,51 +33,13 @@ if (OS == "win32") {
 // Définition des fonctions
 
 /**
- * Liste les processus en cours d'exécution
+ * Exécute une commande dans un processus enfant
+ * @param {string} command
  */
-async function listProcesses() {
-    try {
-        return new Promise((resolve, reject) => {
-            spawn(CMDS.lp, {
-                stdio: 'inherit',
-                shell: true
-            }).on('close', (code) => {
-                resolve(code)
-            })
-        })
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-/**
- * Kill, Pause ou Continue un processus à partir de son PID
- * @param {string} param 
- * @param {int} pid 
- */
-function killProcess(param, pid) {
-    try {
-        return new Promise((resolve, reject) => {
-            spawn(CMDS.bing.cmd + " " + CMDS.bing[param] + " " + pid, {
-                stdio: 'inherit',
-                shell: true
-            }).on('close', (code) => {
-                resolve(code)
-            })
-        })
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-/**
- * Exécute un fichier en fonction de son chemin relatif ou absolu ou s'il est dans le PATH
- * @param {string} p 
- */
-function ex(p) {
+function execute_command(command) {
     try {
         return new Promise ((resolve, reject) => {
-            spawn(p, {
+            spawn(command, {
                 stdio: 'inherit',
                 shell: true
             }).on('close', (code) => {
@@ -122,36 +84,50 @@ async function main() {
 
     // Attend une ligne de commande 
     rl.on('line', async (line) => {
+        // Si la ligne de commande se termine par un point d'exclamation, on exécute la commande en arrière-plan
         if (line.endsWith("!")) {
             if (line.startsWith("lp")) {
-                listProcesses()
+                execute_command(CMDS.lp)
+                
             } else if (line.startsWith("bing")) {
                 var args = line.split(" ")
-                killProcess(args[1], args[2])
+                execute_command(CMDS.bing.cmd + " " + CMDS.bing[args[1]] + " " + args[2])
+
             } else if (line.startsWith("ex")) {
-                ex(line.split(" ")[1])            
+                execute_command(line.split(" ")[1])     
+
             } else if (line.startsWith("keep")) {
                 keep(line.split(" ")[1])
+
             } else if (line == "") {
                 // Ne rien faire
             } else {
                 console.log("Commande inconnue")
+
             }
+
+        // Sinon, on attend la fin de l'exécution de la commande
         } else {
             if (line.startsWith("lp")) {
-                await listProcesses()
+                await execute_command(CMDS.lp) // liste les processus
+
             } else if (line.startsWith("bing")) {
                 var args = line.split(" ")
-                await killProcess(args[1], args[2])
+                await execute_command(CMDS.bing.cmd + " " + CMDS.bing[args[1]] + " " + args[2]) // tue un processus, le suspend ou le reprend
+
             } else if (line.startsWith("ex")) {
-                await ex(line.split(" ")[1])            
+                await execute_command(line.split(" ")[1]) // exécute un fichier en fonction de son chemin relatif ou absolu ou s'il est dans le PATH
+
             } else if (line.startsWith("keep")) {
                 await keep(line.split(" ")[1])
+
             } else if (line == "") {
                 // Ne rien faire
             } else {
                 console.log("Commande inconnue")
+
             }
+
         }
         rl.prompt()
     }).on('close', () => process.exit()) // Quitte le programme si Ctrl+D / Ctrl+C
