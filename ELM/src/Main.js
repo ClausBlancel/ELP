@@ -6264,7 +6264,6 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 };
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $elm$core$Debug$toString = _Debug_toString;
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -6315,11 +6314,41 @@ var $author$project$Main$view = function (model) {
 				A2(
 				$elm$html$Html$div,
 				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						$elm$core$Debug$toString(model.words))
-					]))
+				A2(
+					$elm$core$List$map,
+					function (word) {
+						return A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							A2(
+								$elm$core$List$map,
+								function (meaning) {
+									return A2(
+										$elm$html$Html$div,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text(meaning.partOfSpeech),
+												A2(
+												$elm$html$Html$div,
+												_List_Nil,
+												A2(
+													$elm$core$List$map,
+													function (definition) {
+														return A2(
+															$elm$html$Html$div,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(definition.definition)
+																]));
+													},
+													meaning.definitions))
+											]));
+								},
+								word.meanings));
+					},
+					model.words))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(

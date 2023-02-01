@@ -7,6 +7,7 @@ import Json.Decode exposing (Decoder, field, list, map2, string, map, decodeStri
 import Http
 import Html.Attributes exposing (type_)
 import Debug exposing (toString)
+import List exposing (foldl)
 
 
 -- MAIN
@@ -70,7 +71,14 @@ view model =
     , div [] [ text (if model.wordToFind == "hello" then "Bien joué" else "Essaye de trouver") ]
     , input [ type_ "text", onInput Change ] []
     , input [ type_ "checkbox", onClick Check ] []
-    , div [] [ text (toString model.words) ]
+    , div [] (List.map (\word ->
+        div [] (List.map (\meaning ->
+            div [] [ text meaning.partOfSpeech
+            , div [] (List.map (\definition ->
+                div [] [ text definition.definition ]
+            )meaning.definitions)]
+        )word.meanings)
+    )model.words)
     ]
 
 -- SUBSCRIPTIONS    
