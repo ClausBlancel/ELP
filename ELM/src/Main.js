@@ -6490,7 +6490,6 @@ var $author$project$Main$update = F2(
 							{wordsDefs: words}),
 						$elm$core$Platform$Cmd$none);
 				} else {
-					var error = result.a;
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			case 'GotAllWords':
@@ -6508,7 +6507,6 @@ var $author$project$Main$update = F2(
 							$author$project$Main$WordRand,
 							A2($elm$random$Random$int, 1, 1000)));
 				} else {
-					var error = result.a;
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			default:
@@ -6531,6 +6529,7 @@ var $author$project$Main$Change = function (a) {
 };
 var $author$project$Main$Check = {$: 'Check'};
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
@@ -6580,6 +6579,8 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			$elm$html$Html$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$json$Json$Encode$string = _Json_wrap;
@@ -6598,37 +6599,13 @@ var $author$project$Main$view = function (model) {
 		_List_fromArray(
 			[
 				A2(
-				$elm$html$Html$div,
+				$elm$html$Html$h1,
 				_List_Nil,
 				_List_fromArray(
 					[
 						$elm$html$Html$text(
-						model.checkboxState ? model.wordToFind : 'Mot mystère')
+						model.checkboxState ? model.wordToFind : 'Devinez le mot !')
 					])),
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						_Utils_eq(model.guessedWord, model.wordToFind) ? 'Bien joué' : 'Essaye de trouver')
-					])),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$type_('text'),
-						$elm$html$Html$Events$onInput($author$project$Main$Change)
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$type_('checkbox'),
-						$elm$html$Html$Events$onClick($author$project$Main$Check)
-					]),
-				_List_Nil),
 				A2(
 				$elm$html$Html$div,
 				_List_Nil,
@@ -6655,7 +6632,11 @@ var $author$project$Main$view = function (model) {
 													function (definition) {
 														return A2(
 															$elm$html$Html$div,
-															_List_Nil,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$style, 'padding-left', '3cm'),
+																	A2($elm$html$Html$Attributes$style, 'padding-bottom', '0.5cm')
+																]),
 															_List_fromArray(
 																[
 																	$elm$html$Html$text(definition.definition)
@@ -6666,7 +6647,35 @@ var $author$project$Main$view = function (model) {
 								},
 								word.meanings));
 					},
-					model.wordsDefs))
+					model.wordsDefs)),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '20px'),
+						A2($elm$html$Html$Attributes$style, 'padding-bottom', '0.25cm')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						_Utils_eq(model.guessedWord, model.wordToFind) ? 'Bien joué !' : 'Essaye de trouver le mot')
+					])),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('text'),
+						$elm$html$Html$Events$onInput($author$project$Main$Change)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('checkbox'),
+						$elm$html$Html$Events$onClick($author$project$Main$Check)
+					]),
+				_List_Nil)
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(

@@ -3,10 +3,10 @@ module Main exposing (..)
 import Browser
 import Http
 import Random
-import Html exposing (Html, div, input, text)
+import Html exposing (Html, div, input, text, h1)
 import Html.Events exposing (onInput, onClick)
 import Json.Decode exposing (Decoder, field, list, map2, string, map)
-import Html.Attributes exposing (type_)
+import Html.Attributes exposing (type_, style)
 
 
 -- MAIN
@@ -86,18 +86,18 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-    [ div [] [ text (if model.checkboxState then model.wordToFind else "Mot mystère") ]
-    , div [] [ text (if model.guessedWord == model.wordToFind then "Bien joué" else "Essaye de trouver") ]
-    , input [ type_ "text", onInput Change ] []
-    , input [ type_ "checkbox", onClick Check ] []
+    [ h1 [] [ text (if model.checkboxState then model.wordToFind else "Devinez le mot !") ]
     , div [] (List.map (\word ->
         div [] (List.map (\meaning ->
             div [] [ text meaning.partOfSpeech
             , div [] (List.map (\definition ->
-                div [] [ text definition.definition ]
+                div [ style "padding-left" "3cm", style "padding-bottom" "0.5cm" ] [ text definition.definition ]
             )meaning.definitions)]
         )word.meanings)
     )model.wordsDefs)
+    , div [ style "font-size" "20px", style "padding-bottom" "0.25cm" ] [ text (if model.guessedWord == model.wordToFind then "Bien joué !" else "Essaye de trouver le mot") ]
+    , input [ type_ "text", onInput Change ] []
+    , input [ type_ "checkbox", onClick Check ] []
     ]
 
 -- SUBSCRIPTIONS    
