@@ -1,13 +1,12 @@
 module Main exposing (..)
 
 import Browser
+import Http
+import Random
 import Html exposing (Html, Attribute, div, input, text, button)
 import Html.Events exposing (onInput, onClick)
 import Json.Decode exposing (Decoder, field, list, map2, string, map, decodeString)
-import Http
 import Html.Attributes exposing (type_)
-import Debug exposing (toString)
-import List exposing (foldl)
 
 
 -- MAIN
@@ -25,15 +24,19 @@ main =
 
 type alias Model = 
     { wordToFind : String
+    , guessedWord : String
     , checkboxState : Bool
-    , words : List Word }
+    , wordsDefs : List Word
+    , wordsList : List String }
 
 init : () -> ( Model, Cmd Msg )
-init model =
+init _ =
     ( { wordToFind = "" 
+    , guessedWord = ""
     , checkboxState = False 
-    , words = []}
-    , getMeanings "hello")
+    , wordsDefs = []
+    , wordsList = []}
+    , getAllWords )
 
 
 
@@ -42,7 +45,9 @@ init model =
 type Msg = 
     Check
     | Change String
-    | GotWords (Result Http.Error (List Word))
+    | GotWordsDefs (Result Http.Error (List Word))
+    | GotAllWords (Result Http.Error String)
+    | WordRand Int
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -51,24 +56,38 @@ update msg model =
         Check ->
             ( { model | checkboxState = not model.checkboxState }, Cmd.none )
 
-        Change wordToFind ->
-            ( { model | wordToFind = wordToFind }, Cmd.none)
+        Change guessedWord ->
+            ( { model | guessedWord = guessedWord }, Cmd.none)
 
-        GotWords result ->
+        GotWordsDefs result ->
             case result of
                 Ok words ->
-                    ( { model | words = words }, Cmd.none )
+                    ( { model | wordsDefs = words }, Cmd.none )
 
                 Err error ->
                     ( model, Cmd.none )
+
+        GotAllWords result ->
+            case result of
+                Ok wordList ->
+                    ({model | wordsList = String.split " " wordList  }, Random.generate WordRand (Random.int 1 1000))
+                Err error ->
+                    ( model, Cmd.none)
+
+        WordRand index ->
+            case (getElementAtIndex model.wordsList index) of
+                  Nothing -> 
+                      (model, Cmd.none)
+                  Just wordSelected -> 
+                      ({ model | wordToFind = wordSelected}, getMeanings wordSelected)
 
 -- VIEW
 
 view : Model -> Html Msg
 view model =
     div []
-    [ div [] [ text (if model.checkboxState then "hello" else "Mot mystère") ]
-    , div [] [ text (if model.wordToFind == "hello" then "Bien joué" else "Essaye de trouver") ]
+    [ div [] [ text (if model.checkboxState then model.wordToFind else "Mot mystère") ]
+    , div [] [ text (if model.guessedWord == model.wordToFind then "Bien joué" else "Essaye de trouver") ]
     , input [ type_ "text", onInput Change ] []
     , input [ type_ "checkbox", onClick Check ] []
     , div [] (List.map (\word ->
@@ -78,7 +97,7 @@ view model =
                 div [] [ text definition.definition ]
             )meaning.definitions)]
         )word.meanings)
-    )model.words)
+    )model.wordsDefs)
     ]
 
 -- SUBSCRIPTIONS    
@@ -89,12 +108,26 @@ subscriptions _ =
 
 -- HTTP
 
+getElementAtIndex : List a -> Int -> Maybe a
+getElementAtIndex list index =
+    if index < 0 || index >= List.length list then
+        Nothing
+    else
+        List.head (List.drop index list)
+
 getMeanings : String -> Cmd Msg
 getMeanings word = 
     Http.get {
         url = ("https://api.dictionaryapi.dev/api/v2/entries/en/" ++ word)
-        , expect = Http.expectJson GotWords fullDecoder
+        , expect = Http.expectJson GotWordsDefs fullDecoder
     }
+
+getAllWords : Cmd Msg
+getAllWords =
+    Http.get
+      { url = "http://localhost:5500/ELM/src/thousand_words_things_explainer.txt"
+      , expect = Http.expectString GotAllWords
+      }
 
 fullDecoder : Decoder (List Word)
 fullDecoder =
