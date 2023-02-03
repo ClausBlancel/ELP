@@ -3,9 +3,9 @@ module Main exposing (..)
 import Browser
 import Http
 import Random
-import Html exposing (Html, Attribute, div, input, text, button)
+import Html exposing (Html, div, input, text)
 import Html.Events exposing (onInput, onClick)
-import Json.Decode exposing (Decoder, field, list, map2, string, map, decodeString)
+import Json.Decode exposing (Decoder, field, list, map2, string, map)
 import Html.Attributes exposing (type_)
 
 
@@ -64,14 +64,14 @@ update msg model =
                 Ok words ->
                     ( { model | wordsDefs = words }, Cmd.none )
 
-                Err error ->
+                Err _ ->
                     ( model, Cmd.none )
 
         GotAllWords result ->
             case result of
                 Ok wordList ->
                     ({model | wordsList = String.split " " wordList  }, Random.generate WordRand (Random.int 1 1000))
-                Err error ->
+                Err _ ->
                     ( model, Cmd.none)
 
         WordRand index ->
