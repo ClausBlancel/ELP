@@ -4545,7 +4545,90 @@ function _Http_track(router, xhr, tracker)
 			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
 		}))));
 	});
-}var $elm$core$Basics$EQ = {$: 'EQ'};
+}
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
+var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
@@ -5334,10 +5417,9 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Main$GotWords = function (a) {
-	return {$: 'GotWords', a: a};
+var $author$project$Main$GotAllWords = function (a) {
+	return {$: 'GotAllWords', a: a};
 };
-var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -5893,17 +5975,6 @@ var $elm$http$Http$expectStringResponse = F2(
 			$elm$core$Basics$identity,
 			A2($elm$core$Basics$composeR, toResult, toMsg));
 	});
-var $elm$core$Result$mapError = F2(
-	function (f, result) {
-		if (result.$ === 'Ok') {
-			var v = result.a;
-			return $elm$core$Result$Ok(v);
-		} else {
-			var e = result.a;
-			return $elm$core$Result$Err(
-				f(e));
-		}
-	});
 var $elm$http$Http$BadBody = function (a) {
 	return {$: 'BadBody', a: a};
 };
@@ -5915,6 +5986,17 @@ var $elm$http$Http$BadUrl = function (a) {
 };
 var $elm$http$Http$NetworkError = {$: 'NetworkError'};
 var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
 var $elm$http$Http$resolve = F2(
 	function (toResult, response) {
 		switch (response.$) {
@@ -5938,52 +6020,12 @@ var $elm$http$Http$resolve = F2(
 					toResult(body));
 		}
 	});
-var $elm$http$Http$expectJson = F2(
-	function (toMsg, decoder) {
-		return A2(
-			$elm$http$Http$expectStringResponse,
-			toMsg,
-			$elm$http$Http$resolve(
-				function (string) {
-					return A2(
-						$elm$core$Result$mapError,
-						$elm$json$Json$Decode$errorToString,
-						A2($elm$json$Json$Decode$decodeString, decoder, string));
-				}));
-	});
-var $elm$json$Json$Decode$list = _Json_decodeList;
-var $author$project$Main$Word = function (meanings) {
-	return {meanings: meanings};
+var $elm$http$Http$expectString = function (toMsg) {
+	return A2(
+		$elm$http$Http$expectStringResponse,
+		toMsg,
+		$elm$http$Http$resolve($elm$core$Result$Ok));
 };
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $author$project$Main$Meaning = F2(
-	function (partOfSpeech, definitions) {
-		return {definitions: definitions, partOfSpeech: partOfSpeech};
-	});
-var $author$project$Main$Definition = function (definition) {
-	return {definition: definition};
-};
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Main$definitionDecoder = A2(
-	$elm$json$Json$Decode$map,
-	$author$project$Main$Definition,
-	A2($elm$json$Json$Decode$field, 'definition', $elm$json$Json$Decode$string));
-var $author$project$Main$meanDecoder = A3(
-	$elm$json$Json$Decode$map2,
-	$author$project$Main$Meaning,
-	A2($elm$json$Json$Decode$field, 'partOfSpeech', $elm$json$Json$Decode$string),
-	A2(
-		$elm$json$Json$Decode$field,
-		'definitions',
-		$elm$json$Json$Decode$list($author$project$Main$definitionDecoder)));
-var $author$project$Main$wordDecoder = A2(
-	$elm$json$Json$Decode$map,
-	$author$project$Main$Word,
-	A2(
-		$elm$json$Json$Decode$field,
-		'meanings',
-		$elm$json$Json$Decode$list($author$project$Main$meanDecoder)));
-var $author$project$Main$fullDecoder = $elm$json$Json$Decode$list($author$project$Main$wordDecoder);
 var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
@@ -6157,23 +6199,268 @@ var $elm$http$Http$get = function (r) {
 	return $elm$http$Http$request(
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
-var $author$project$Main$getMeanings = function (word) {
-	return $elm$http$Http$get(
-		{
-			expect: A2($elm$http$Http$expectJson, $author$project$Main$GotWords, $author$project$Main$fullDecoder),
-			url: 'https://api.dictionaryapi.dev/api/v2/entries/en/' + word
-		});
-};
-var $author$project$Main$init = function (model) {
+var $author$project$Main$getAllWords = $elm$http$Http$get(
+	{
+		expect: $elm$http$Http$expectString($author$project$Main$GotAllWords),
+		url: 'http://localhost:5500/ELM/src/thousand_words_things_explainer.txt'
+	});
+var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
-		{checkboxState: false, wordToFind: '', words: _List_Nil},
-		$author$project$Main$getMeanings('hello'));
+		{checkboxState: false, guessedWord: '', wordToFind: '', wordsDefs: _List_Nil, wordsList: _List_Nil},
+		$author$project$Main$getAllWords);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (_v0) {
 	return $elm$core$Platform$Sub$none;
 };
+var $author$project$Main$WordRand = function (a) {
+	return {$: 'WordRand', a: a};
+};
+var $elm$random$Random$Generate = function (a) {
+	return {$: 'Generate', a: a};
+};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
+};
+var $elm$time$Time$Name = function (a) {
+	return {$: 'Name', a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 'Offset', a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0.a;
+	return millis;
+};
+var $elm$random$Random$init = A2(
+	$elm$core$Task$andThen,
+	function (time) {
+		return $elm$core$Task$succeed(
+			$elm$random$Random$initialSeed(
+				$elm$time$Time$posixToMillis(time)));
+	},
+	$elm$time$Time$now);
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
+	});
+var $elm$random$Random$onEffects = F3(
+	function (router, commands, seed) {
+		if (!commands.b) {
+			return $elm$core$Task$succeed(seed);
+		} else {
+			var generator = commands.a.a;
+			var rest = commands.b;
+			var _v1 = A2($elm$random$Random$step, generator, seed);
+			var value = _v1.a;
+			var newSeed = _v1.b;
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v2) {
+					return A3($elm$random$Random$onEffects, router, rest, newSeed);
+				},
+				A2($elm$core$Platform$sendToApp, router, value));
+		}
+	});
+var $elm$random$Random$onSelfMsg = F3(
+	function (_v0, _v1, seed) {
+		return $elm$core$Task$succeed(seed);
+	});
+var $elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var $elm$random$Random$map = F2(
+	function (func, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v1 = genA(seed0);
+				var a = _v1.a;
+				var seed1 = _v1.b;
+				return _Utils_Tuple2(
+					func(a),
+					seed1);
+			});
+	});
+var $elm$random$Random$cmdMap = F2(
+	function (func, _v0) {
+		var generator = _v0.a;
+		return $elm$random$Random$Generate(
+			A2($elm$random$Random$map, func, generator));
+	});
+_Platform_effectManagers['Random'] = _Platform_createManager($elm$random$Random$init, $elm$random$Random$onEffects, $elm$random$Random$onSelfMsg, $elm$random$Random$cmdMap);
+var $elm$random$Random$command = _Platform_leaf('Random');
+var $elm$random$Random$generate = F2(
+	function (tagger, generator) {
+		return $elm$random$Random$command(
+			$elm$random$Random$Generate(
+				A2($elm$random$Random$map, tagger, generator)));
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$getElementAtIndex = F2(
+	function (list, index) {
+		return ((index < 0) || (_Utils_cmp(
+			index,
+			$elm$core$List$length(list)) > -1)) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
+			A2($elm$core$List$drop, index, list));
+	});
+var $author$project$Main$GotWordsDefs = function (a) {
+	return {$: 'GotWordsDefs', a: a};
+};
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
+	});
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$Main$Word = function (meanings) {
+	return {meanings: meanings};
+};
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Main$Meaning = F2(
+	function (partOfSpeech, definitions) {
+		return {definitions: definitions, partOfSpeech: partOfSpeech};
+	});
+var $author$project$Main$Definition = function (definition) {
+	return {definition: definition};
+};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$definitionDecoder = A2(
+	$elm$json$Json$Decode$map,
+	$author$project$Main$Definition,
+	A2($elm$json$Json$Decode$field, 'definition', $elm$json$Json$Decode$string));
+var $author$project$Main$meanDecoder = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Main$Meaning,
+	A2($elm$json$Json$Decode$field, 'partOfSpeech', $elm$json$Json$Decode$string),
+	A2(
+		$elm$json$Json$Decode$field,
+		'definitions',
+		$elm$json$Json$Decode$list($author$project$Main$definitionDecoder)));
+var $author$project$Main$wordDecoder = A2(
+	$elm$json$Json$Decode$map,
+	$author$project$Main$Word,
+	A2(
+		$elm$json$Json$Decode$field,
+		'meanings',
+		$elm$json$Json$Decode$list($author$project$Main$meanDecoder)));
+var $author$project$Main$fullDecoder = $elm$json$Json$Decode$list($author$project$Main$wordDecoder);
+var $author$project$Main$getMeanings = function (word) {
+	return $elm$http$Http$get(
+		{
+			expect: A2($elm$http$Http$expectJson, $author$project$Main$GotWordsDefs, $author$project$Main$fullDecoder),
+			url: 'https://api.dictionaryapi.dev/api/v2/entries/en/' + word
+		});
+};
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Bitwise$xor = _Bitwise_xor;
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Basics$not = _Basics_not;
@@ -6187,24 +6474,55 @@ var $author$project$Main$update = F2(
 						{checkboxState: !model.checkboxState}),
 					$elm$core$Platform$Cmd$none);
 			case 'Change':
-				var wordToFind = msg.a;
+				var guessedWord = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{wordToFind: wordToFind}),
+						{guessedWord: guessedWord}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'GotWordsDefs':
 				var result = msg.a;
 				if (result.$ === 'Ok') {
 					var words = result.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{words: words}),
+							{wordsDefs: words}),
 						$elm$core$Platform$Cmd$none);
 				} else {
 					var error = result.a;
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'GotAllWords':
+				var result = msg.a;
+				if (result.$ === 'Ok') {
+					var wordList = result.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								wordsList: A2($elm$core$String$split, ' ', wordList)
+							}),
+						A2(
+							$elm$random$Random$generate,
+							$author$project$Main$WordRand,
+							A2($elm$random$Random$int, 1, 1000)));
+				} else {
+					var error = result.a;
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			default:
+				var index = msg.a;
+				var _v3 = A2($author$project$Main$getElementAtIndex, model.wordsList, index);
+				if (_v3.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var wordSelected = _v3.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{wordToFind: wordSelected}),
+						$author$project$Main$getMeanings(wordSelected));
 				}
 		}
 	});
@@ -6285,7 +6603,7 @@ var $author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text(
-						model.checkboxState ? 'hello' : 'Mot mystère')
+						model.checkboxState ? model.wordToFind : 'Mot mystère')
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -6293,7 +6611,7 @@ var $author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text(
-						(model.wordToFind === 'hello') ? 'Bien joué' : 'Essaye de trouver')
+						_Utils_eq(model.guessedWord, model.wordToFind) ? 'Bien joué' : 'Essaye de trouver')
 					])),
 				A2(
 				$elm$html$Html$input,
@@ -6348,7 +6666,7 @@ var $author$project$Main$view = function (model) {
 								},
 								word.meanings));
 					},
-					model.words))
+					model.wordsDefs))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
