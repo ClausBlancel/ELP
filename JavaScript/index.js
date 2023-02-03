@@ -1,6 +1,6 @@
 // Importation des modules
 const readline = require('readline')
-const { spawn } = require('child_process')
+const { exec } = require('child_process')
 const process = require('process')
 const keypress = require('keypress');
 
@@ -39,11 +39,17 @@ if (OS == "win32") {
 function execute_command(command) {
     try {
         return new Promise ((resolve, reject) => {
-            spawn(command, {
-                stdio: 'inherit',
-                shell: true
-            }).on('close', (code) => {
-                resolve(code)
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    console.log(`error: ${error.message}`)
+                    reject(error)
+                }
+                if (stderr) {
+                    console.log(`stderr: ${stderr}`)
+                    reject(stderr)
+                }
+                console.log(`${stdout}`)
+                resolve(stdout)
             })
         })      
     } catch (error) {
