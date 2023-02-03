@@ -35,6 +35,7 @@ if (OS == "win32") {
 /**
  * Exécute une commande dans un processus enfant
  * @param {string} command
+ * @returns {Promise}
  */
 function execute_command(command) {
     try {
