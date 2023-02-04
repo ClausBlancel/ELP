@@ -75,8 +75,10 @@ async function main() {
     const rl = readline.createInterface({input: process.stdin, output: process.stdout})
     rl.setPrompt('>>>')
 
+    // Ecoute les touches pressées
     keypress(process.stdin);
 
+    // Si Ctrl+P, on quitte le programme
     process.stdin.on('keypress', function (ch, key) {
       if (key && key.ctrl && key.name == 'p') {
         console.log('Ctrl+P => Sortie du programme');
