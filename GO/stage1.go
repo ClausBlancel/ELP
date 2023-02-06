@@ -1,6 +1,10 @@
 //Compression de données/Run-length encoding
 //https://fr.wikibooks.org/wiki/Compression_de_donn%C3%A9es/Run-length_encoding
 
+//TODO :
+// Faire en sorte que les goroutine de codage écrive dans un slice référencant les num de ligne et le resultat codé
+// Se servir de ce slices pour écrire dans un fichier par la suite.
+
 package main
 
 import (
@@ -9,11 +13,15 @@ import (
 	"io"
 	"math"
 	"os"
-	"time"
 )
 
-func codage(s string, canal chan string) {
-	res := ""
+type res struct {
+	res  string
+	line int
+}
+
+func codage(s string, line int, canal chan res) {
+	final := res{res: "", line: line}
 	nb := 0
 	for i := 0; i < len(s); i++ {
 		nb = 0
@@ -24,12 +32,12 @@ func codage(s string, canal chan string) {
 			nb++
 		}
 		if nb != 0 {
-			res += fmt.Sprint(nb + 1)
+			final.res += fmt.Sprint(nb + 1)
 		}
-		res += string(s[i])
+		final.res += string(s[i])
 		i += nb
 	}
-	canal <- res
+	canal <- final
 }
 
 func decodage(s string, canal chan string) {
@@ -68,7 +76,22 @@ func decodage(s string, canal chan string) {
 	canal <- res
 }
 
-func ecrireFichier(s string, fichier string) {
+func insert(slice []string, index int, value string) []string {
+
+	// Grow the slice by one element.
+	slice = slice[0 : len(slice)+1]
+
+	// Use copy to move the upper part of the slice out of the way and open a hole.
+	copy(slice[index+1:], slice[index:])
+
+	// Store the new value.
+	slice[index] = value
+
+	// Return the result.
+	return slice
+}
+
+func ecrireFichier(s []string, fichier string) {
 	file, err := os.OpenFile(fichier, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	defer file.Close() // on ferme automatiquement à la fin de notre programme
 
@@ -76,7 +99,11 @@ func ecrireFichier(s string, fichier string) {
 		panic(err)
 	}
 
-	_, err = file.WriteString(s + "\n") // écrire dans le fichier
+	// écrire dans le fichier
+	for i := 0; i < len(s); i++ {
+		_, err = file.WriteString(s[i])
+	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -84,9 +111,7 @@ func ecrireFichier(s string, fichier string) {
 
 func main() {
 
-	start := time.Now()
-
-	canal := make(chan string)
+	canal := make(chan res)
 
 	// Ouvrir le fichier
 	file, err := os.Open("adn.txt")
@@ -98,9 +123,13 @@ func main() {
 
 	// Créer un nouveau Reader pour lire le fichier
 	reader := bufio.NewReader(file)
+	numLigne := 0
 
-	// Lire le fichier ligne par ligne
+	// Lire le fichier ligne par ligne et l'insérer dans un slice
+	final := []string{}
+	resultat := res{}
 	for {
+		numLigne++
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err != io.EOF {
@@ -108,10 +137,11 @@ func main() {
 			}
 			break
 		}
-		go codage(line, canal)
-		go ecrireFichier(<-canal, "resultat.txt")
-	}
+		go codage(line, numLigne, canal)
+		resultat = <-canal
+		final = append(final, "")
+		final = append(final[:resultat.line], append([]string{resultat.res}, final[resultat.line:]...)...)
 
-	end := time.Now()
-	println(end.Sub(start))
+	}
+	ecrireFichier(final[:], "resultat.txt")
 }
